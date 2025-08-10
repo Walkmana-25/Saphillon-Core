@@ -10,19 +10,18 @@ repository = "https://github.com/Walkmana-25/Sapphillon-Core"
 homepage = "https://github.com/Walkmana-25/Sapphillon-Core"
 
 [dependencies]
-anyhow = "1.0"
-tokio = { version = "1", features = ["full"] }
+anyhow = { version = "1.0", default-features = false }
+tokio = "1"
 log = "0.4"
-chrono = "0.4"
-env_logger = "0.11"
-
-tonic = "0.12.0"
-prost = "0.13.1"
-prost-types = "0.13.1"
-deno_core = "0.354.0"
+chrono = { version = "0.4", default-features = false }
+env_logger = { version = "0.11", default-features = false }
+tonic = { version = "0.12.0", default-features = false }
+prost = { version = "0.13.1", default-features = false }
+prost-types = { version = "0.13.1", default-features = false }
+deno_core = { version = "0.354.0", default-features = false }
 deno_runtime = "0.220.0"
 deno_permissions = "0.71.0"
-deno_error = { version = "0.7.0", features = ["serde", "serde_json", "tokio", "url"] }
+deno_error = "0.7.0"
 
 [build-dependencies]
-tonic-build = "0.12.0"
+tonic-build = { version = "0.12.0", default-features = false }
