@@ -23,7 +23,6 @@ deno_core = { version = "0.354.0", default-features = false }
 deno_runtime = "0.220.0"
 deno_permissions = "0.71.0"
 deno_error = "0.7.0"
-nasm-rs = "0.3.0"
 
 
 [build-dependencies]
