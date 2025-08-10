@@ -2,9 +2,13 @@ use crate::proto::sapphillon;
 use crate::plugin::CorePluginPackage;
 
 pub enum WorkflowResult {
+    /// Represents the workflow has not been executed yet
     NotExecuted,
+    /// Represents the workflow is currently running 
     Running,
+    /// Represents the workflow has completed successfully
     Success(String),
+    /// Represents the workflow has failed with an error message
     Failure(String),
 }
 
