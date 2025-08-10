@@ -1,4 +1,5 @@
 use deno_core::OpDecl;
+use deno_runtime::deno_webgpu::wgpu_types::DepthBiasState;
 use std::borrow::Cow;
 use crate::proto::sapphillon::v1::{PluginFunction, PluginPackage};
 
@@ -11,6 +12,8 @@ pub struct CorePluginFunction {
     pub name: String,
     /// Deno OpDecl (function body)
     pub func: Cow<'static, OpDecl>,
+    /// Description of the function
+    pub description: String,
 }
 
 impl CorePluginFunction {
@@ -20,14 +23,16 @@ impl CorePluginFunction {
     /// * `id` - Unique ID of the function
     /// * `name` - Function name
     /// * `func` - Deno OpDecl (function body)
-    pub fn new(id: String, name: String, func: OpDecl) -> Self {
+    pub fn new(id: String, name: String, description: String, func: OpDecl) -> Self {
         Self {
             id,
             name,
             func: Cow::Owned(func),
+            description,
         }
 
-    }
+        }
+
 
     /// Creates a CorePluginFunction from a proto PluginFunction and OpDecl.
     ///
@@ -39,6 +44,7 @@ impl CorePluginFunction {
             id: plugin_function.function_id.clone(),
             name: plugin_function.function_name.clone(),
             func: Cow::Owned(function),
+            description: plugin_function.description.clone(),
         }
     }
 }
@@ -123,10 +129,12 @@ mod tests {
         let func = CorePluginFunction::new(
             "id".to_string(),
             "name".to_string(),
+            "description".to_string(),
             dummy_op()
         );
         assert_eq!(func.id, "id");
         assert_eq!(func.name, "name");
+        assert_eq!(func.description, "description");
     }
 
     #[test]
@@ -139,7 +147,7 @@ mod tests {
 
     #[test]
     fn test_core_plugin_package_new() {
-        let f = CorePluginFunction::new("id".to_string(), "name".to_string(), dummy_op());
+        let f = CorePluginFunction::new("id".to_string(), "name".to_string(), "desc".to_string(), dummy_op());
         let pkg = CorePluginPackage::new("pid".to_string(), "pname".to_string(), vec![f]);
         assert_eq!(pkg.id, "pid");
         assert_eq!(pkg.name, "pname");
