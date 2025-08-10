@@ -2,13 +2,24 @@ use deno_core::OpDecl;
 use std::borrow::Cow;
 use crate::proto::sapphillon::v1::{PluginFunction, PluginPackage};
 
+/// Core representation of a plugin function.
+/// Holds the function's ID, name, and Deno operation.
 pub struct CorePluginFunction {
+    /// Unique ID of the function
     pub id: String,
+    /// Function name
     pub name: String,
+    /// Deno OpDecl (function body)
     pub func: Cow<'static, OpDecl>,
 }
 
 impl CorePluginFunction {
+    /// Creates a new CorePluginFunction from the given ID, name, and function body.
+    ///
+    /// # Arguments
+    /// * `id` - Unique ID of the function
+    /// * `name` - Function name
+    /// * `func` - Deno OpDecl (function body)
     pub fn new(id: String, name: String, func: OpDecl) -> Self {
         Self {
             id,
@@ -18,6 +29,11 @@ impl CorePluginFunction {
 
     }
 
+    /// Creates a CorePluginFunction from a proto PluginFunction and OpDecl.
+    ///
+    /// # Arguments
+    /// * `plugin_function` - PluginFunction defined in proto
+    /// * `function` - Deno OpDecl (function body)
     pub fn new_from_plugin_function(plugin_function: &PluginFunction, function: OpDecl) -> Self {
         Self {
             id: plugin_function.function_id.clone(),
@@ -27,13 +43,24 @@ impl CorePluginFunction {
     }
 }
 
+    /// Core representation of a plugin package.
+    /// Holds the package ID, name, and a list of functions.
 pub struct CorePluginPackage {
+    /// Unique ID of the package
     pub id: String,
+    /// Package name
     pub name: String,
+    /// List of functions included in the package
     pub functions: Vec<CorePluginFunction>,
 }
 
 impl CorePluginPackage {
+    /// Creates a new CorePluginPackage from the given ID, name, and function list.
+    ///
+    /// # Arguments
+    /// * `id` - Unique ID of the package
+    /// * `name` - Package name
+    /// * `functions` - List of functions included in the package
     pub fn new(id: String, name: String, functions: Vec<CorePluginFunction>) -> Self {
         Self {
             id,
@@ -42,6 +69,11 @@ impl CorePluginPackage {
         }
     }
 
+    /// Creates a CorePluginPackage from a proto PluginPackage and function list.
+    ///
+    /// # Arguments
+    /// * `plugin_package` - PluginPackage defined in proto
+    /// * `functions` - List of functions included in the package
     pub fn new_from_plugin_package(plugin_package: &PluginPackage, functions: Vec<CorePluginFunction>) -> Self {
 
         Self {
