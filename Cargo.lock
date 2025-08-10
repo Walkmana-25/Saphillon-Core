@@ -4345,6 +4345,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "nasm"
+version = "0.0.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "e94c0a4df47a3bb6ed27c447abdeadb2c72e179a727bbf3be9d692a235788536"
+
+[[package]]
 name = "ndk-sys"
 version = "0.5.0+25.2.9519653"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -5698,6 +5704,7 @@ dependencies = [
  "deno_runtime",
  "env_logger",
  "log",
+ "nasm",
  "prost",
  "prost-types",
  "tokio",
