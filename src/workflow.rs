@@ -58,3 +58,86 @@ impl CoreWorkflowCode {
     }
 
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::plugin::{CorePluginPackage, CorePluginFunction};
+    use crate::proto::sapphillon::v1::WorkflowCode;
+
+    // ダミーCorePluginFunction生成
+    fn dummy_plugin_function() -> CorePluginFunction {
+        // OpDeclのダミーはplugin.rsのテスト同様にu32返却opで代用
+        use deno_core::op2;
+        #[op2(fast)]
+        fn dummy_op() -> u32 { 42 }
+        CorePluginFunction::new(
+            "fid".to_string(),
+            "fname".to_string(),
+            "desc".to_string(),
+            dummy_op()
+        )
+    }
+
+    // ダミーCorePluginPackage生成
+    fn dummy_plugin_package() -> CorePluginPackage {
+        CorePluginPackage::new(
+            "pid".to_string(),
+            "pname".to_string(),
+            vec![dummy_plugin_function()]
+        )
+    }
+
+    // ダミーWorkflowCode(proto)生成
+    fn dummy_proto_workflow_code() -> WorkflowCode {
+        WorkflowCode {
+            id: "wid".to_string(),
+            code: "console.log('hello');".to_string(),
+            code_revision: 1,
+            ..Default::default()
+        }
+    }
+
+    #[test]
+    fn test_core_workflow_code_new() {
+        let pkg = dummy_plugin_package();
+        let code = CoreWorkflowCode::new(
+            "wid".to_string(),
+            "console.log('test');".to_string(),
+            vec![pkg],
+            2
+        );
+        assert_eq!(code.id, "wid");
+        assert_eq!(code.code, "console.log('test');");
+        assert_eq!(code.plugin_packages.len(), 1);
+        assert_eq!(code.code_revision, 2);
+        matches!(code.result, WorkflowResult::NotExecuted);
+    }
+
+    #[test]
+    fn test_core_workflow_code_new_from_proto() {
+        let proto = dummy_proto_workflow_code();
+        let pkg = dummy_plugin_package();
+        let code = CoreWorkflowCode::new_from_proto(&proto, vec![pkg]);
+        assert_eq!(code.id, proto.id);
+        assert_eq!(code.code, proto.code);
+        assert_eq!(code.plugin_packages.len(), 1);
+        assert_eq!(code.code_revision, proto.code_revision);
+        matches!(code.result, WorkflowResult::NotExecuted);
+    }
+
+    #[test]
+    fn test_workflow_result_initial_state() {
+        let pkg = dummy_plugin_package();
+        let code = CoreWorkflowCode::new(
+            "wid".to_string(),
+            "console.log('test');".to_string(),
+            vec![pkg],
+            1
+        );
+        if let WorkflowResult::NotExecuted = code.result {
+            // OK
+        } else {
+            panic!("Initial WorkflowResult should be NotExecuted");
+        }
+    }
+}
