@@ -22,6 +22,7 @@ use deno_core::{Extension, JsRuntime, OpDecl, RuntimeOptions, error::JsError};
 ///
 /// # Errors
 /// - Any JavaScript execution error is returned as `Box<JsError>`.
+#[allow(unused)]
 pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>) -> Result<(), Box<JsError>> {
     // Register the extension with the provided operations
     let extension = Extension {
