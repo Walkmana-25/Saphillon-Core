@@ -51,3 +51,77 @@ impl CorePluginPackage {
         }
     }
 }
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use deno_core::op2;
+
+    fn dummy_plugin_function() -> crate::proto::sapphillon::v1::PluginFunction {
+        crate::proto::sapphillon::v1::PluginFunction {
+            function_id: "fid".to_string(),
+            function_name: "fname".to_string(),
+            description: "desc".to_string(),
+            permissions: vec![],
+        }
+    }
+
+    fn dummy_plugin_package() -> crate::proto::sapphillon::v1::PluginPackage {
+        crate::proto::sapphillon::v1::PluginPackage {
+            package_id: "pid".to_string(),
+            package_name: "pname".to_string(),
+            package_version: "1.0.0".to_string(),
+            description: "desc".to_string(),
+            functions: vec![dummy_plugin_function()],
+            plugin_store_url: "".to_string(),
+            internal_plugin: None,
+            verified: None,
+            deprecated: None,
+            installed_at: None,
+            updated_at: None,
+        }
+    }
+
+    #[op2(fast)]
+    fn dummy_op() -> u32 {
+        42
+    }
+
+    #[test]
+    fn test_core_plugin_function_new() {
+        let func = CorePluginFunction::new(
+            "id".to_string(),
+            "name".to_string(),
+            dummy_op()
+        );
+        assert_eq!(func.id, "id");
+        assert_eq!(func.name, "name");
+    }
+
+    #[test]
+    fn test_core_plugin_function_new_from_plugin_function() {
+        let pf = dummy_plugin_function();
+        let func = CorePluginFunction::new_from_plugin_function(&pf, dummy_op());
+        assert_eq!(func.id, pf.function_id);
+        assert_eq!(func.name, pf.function_name);
+    }
+
+    #[test]
+    fn test_core_plugin_package_new() {
+        let f = CorePluginFunction::new("id".to_string(), "name".to_string(), dummy_op());
+        let pkg = CorePluginPackage::new("pid".to_string(), "pname".to_string(), vec![f]);
+        assert_eq!(pkg.id, "pid");
+        assert_eq!(pkg.name, "pname");
+        assert_eq!(pkg.functions.len(), 1);
+    }
+
+    #[test]
+    fn test_core_plugin_package_new_from_plugin_package() {
+        let pf = dummy_plugin_function();
+        let f = CorePluginFunction::new_from_plugin_function(&pf, dummy_op());
+        let pp = dummy_plugin_package();
+        let pkg = CorePluginPackage::new_from_plugin_package(&pp, vec![f]);
+        assert_eq!(pkg.id, pp.package_id);
+        assert_eq!(pkg.name, pp.package_name);
+        assert_eq!(pkg.functions.len(), 1);
+    }
+}
