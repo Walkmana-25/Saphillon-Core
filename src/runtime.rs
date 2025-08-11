@@ -38,7 +38,7 @@ pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>) -> Result<(), Box<JsErr
     });
 
     // Execute the provided script in the runtime
-    runtime.execute_script("workflow.js", script.to_string())?;
+    let result = runtime.execute_script("workflow.js", script.to_string())?;
 
     Ok(())
 }

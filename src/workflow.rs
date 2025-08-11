@@ -1,5 +1,9 @@
 use crate::proto::sapphillon;
 use crate::plugin::CorePluginPackage;
+use crate::runtime::run_script;
+use crate::proto::sapphillon::v1::{WorkflowResult, WorkflowResultType};
+use prost_types::Timestamp;
+use std::time::{SystemTime, UNIX_EPOCH};
 
 
 pub struct CoreWorkflowCode {
@@ -32,6 +36,56 @@ impl CoreWorkflowCode {
         }
     }
 
+    /// ワークフローコードを実行し、WorkflowResultをresultに追加する
+    pub fn run(&mut self) {
+        // OpDecl収集
+        let mut ops = Vec::new();
+        for pkg in &self.plugin_packages {
+            for func in &pkg.functions {
+                ops.push(func.func.clone().into_owned());
+            }
+        }
+
+        // 実行
+        let now = SystemTime::now();
+        let epoch = now.duration_since(UNIX_EPOCH).unwrap();
+        let id = format!("{}-{}", self.id, epoch.as_nanos());
+        let display_name = format!("Run {}", epoch.as_secs());
+        let ran_at = Some(Timestamp {
+            seconds: epoch.as_secs() as i64,
+            nanos: epoch.subsec_nanos() as i32,
+        });
+        let workflow_result_revision = self.result.last().map(|r| r.workflow_result_revision + 1).unwrap_or(1);
+
+        let (description, result, result_type, exit_code) = match run_script(&self.code, ops) {
+            Ok(_) => (
+                "Success".to_string(),
+                "Success".to_string(),
+                WorkflowResultType::SuccessUnspecified as i32,
+                0,
+            ),
+            Err(e) => (
+                format!("Error: {}", e),
+                format!("{}", e),
+                WorkflowResultType::Failure as i32,
+                1,
+            ),
+        };
+
+        let result_obj = WorkflowResult {
+            id,
+            display_name,
+            description,
+            result,
+            ran_at,
+            result_type,
+            exit_code,
+            workflow_result_revision,
+            ..Default::default()
+        };
+        self.result.push(result_obj);
+    }
+
     /// Creates a CoreWorkflowCode from a proto WorkflowCode.
     ///
     /// # Arguments
@@ -46,6 +100,8 @@ impl CoreWorkflowCode {
             result: Vec::new(),
         }
     }
+    
+    
 
 }
 #[cfg(test)]
@@ -77,6 +133,40 @@ mod tests {
         )
     }
 
+
+    #[test]
+    fn test_core_workflow_code_run_success() {
+        let pkg = dummy_plugin_package();
+        let mut code = CoreWorkflowCode::new(
+            "wid".to_string(),
+            "1 + 1;".to_string(),
+            vec![pkg],
+            1
+        );
+        code.run();
+        assert_eq!(code.result.len(), 1);
+        let res = &code.result[0];
+        assert_eq!(res.exit_code, 0);
+        assert_eq!(res.result_type, sapphillon::v1::WorkflowResultType::SuccessUnspecified as i32);
+        assert_eq!(res.result, "Success");
+    }
+
+    #[test]
+    fn test_core_workflow_code_run_failure() {
+        let pkg = dummy_plugin_package();
+        let mut code = CoreWorkflowCode::new(
+            "wid".to_string(),
+            "throw new Error('fail');".to_string(),
+            vec![pkg],
+            1
+        );
+        code.run();
+        assert_eq!(code.result.len(), 1);
+        let res = &code.result[0];
+        assert_eq!(res.exit_code, 1);
+        assert_eq!(res.result_type, sapphillon::v1::WorkflowResultType::Failure as i32);
+        assert!(res.result.contains("fail"));
+    }
     // ダミーWorkflowCode(proto)生成
     fn dummy_proto_workflow_code() -> WorkflowCode {
         WorkflowCode {
