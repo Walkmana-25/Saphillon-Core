@@ -311,6 +311,13 @@ pub struct WorkflowCode {
     /// Use specific Permission.resource values to scope access where possible.
     #[prost(message, repeated, tag="7")]
     pub required_permissions: ::prost::alloc::vec::Vec<Permission>,
+    /// Plugin packages that this workflow code depends on.
+    /// This allows the workflow to use functions defined in these plugins.
+    #[prost(message, repeated, tag="8")]
+    pub plugin_packages: ::prost::alloc::vec::Vec<PluginPackage>,
+    /// Plugin functions that this workflow code directly uses.
+    #[prost(string, repeated, tag="9")]
+    pub plugin_function_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// Captures the result of running a workflow at a specific code revision.
 ///
