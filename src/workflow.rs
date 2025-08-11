@@ -1,16 +1,6 @@
 use crate::proto::sapphillon;
 use crate::plugin::CorePluginPackage;
 
-pub enum WorkflowResult {
-    /// Represents the workflow has not been executed yet
-    NotExecuted,
-    /// Represents the workflow is currently running 
-    Running,
-    /// Represents the workflow has completed successfully
-    Success(String),
-    /// Represents the workflow has failed with an error message
-    Failure(String),
-}
 
 pub struct CoreWorkflowCode {
     /// Unique ID of the workflow code
@@ -21,7 +11,7 @@ pub struct CoreWorkflowCode {
     pub plugin_packages: Vec<CorePluginPackage>,
     
     pub code_revision: i32,
-    pub result: WorkflowResult,
+    pub result: Vec<sapphillon::v1::WorkflowResult>,
 }
 
 impl CoreWorkflowCode {
@@ -38,7 +28,7 @@ impl CoreWorkflowCode {
             code,
             plugin_packages,
             code_revision,
-            result: WorkflowResult::NotExecuted,
+            result: Vec::new(),
         }
     }
 
@@ -53,7 +43,7 @@ impl CoreWorkflowCode {
             code: workflow_code.code.clone(),
             plugin_packages,
             code_revision: workflow_code.code_revision,
-            result: WorkflowResult::NotExecuted,
+            result: Vec::new(),
         }
     }
 
@@ -110,7 +100,7 @@ mod tests {
         assert_eq!(code.code, "console.log('test');");
         assert_eq!(code.plugin_packages.len(), 1);
         assert_eq!(code.code_revision, 2);
-        matches!(code.result, WorkflowResult::NotExecuted);
+        assert!(code.result.is_empty());
     }
 
     #[test]
@@ -122,7 +112,7 @@ mod tests {
         assert_eq!(code.code, proto.code);
         assert_eq!(code.plugin_packages.len(), 1);
         assert_eq!(code.code_revision, proto.code_revision);
-        matches!(code.result, WorkflowResult::NotExecuted);
+        assert!(code.result.is_empty());
     }
 
     #[test]
@@ -134,10 +124,6 @@ mod tests {
             vec![pkg],
             1
         );
-        if let WorkflowResult::NotExecuted = code.result {
-            // OK
-        } else {
-            panic!("Initial WorkflowResult should be NotExecuted");
-        }
+        assert!(code.result.is_empty(), "Initial results should be empty");
     }
 }
