@@ -36,9 +36,24 @@ impl CoreWorkflowCode {
         }
     }
 
-    /// ワークフローコードを実行し、WorkflowResultをresultに追加する
+    /// Executes the workflow code and appends a WorkflowResult to the result list.
+    ///
+    /// This method collects all OpDecls from the associated plugin packages, executes the workflow code
+    /// using these operations, and records the execution result. The result includes metadata such as
+    /// execution time, revision, exit code, and result type (success or failure). The result is appended
+    /// to the `result` field of the struct.
+    ///
+    /// # Execution Flow
+    /// 1. Collect OpDecls from all plugin packages.
+    /// 2. Generate execution metadata (ID, display name, timestamp, revision).
+    /// 3. Execute the workflow code using `run_script`.
+    /// 4. Construct a `WorkflowResult` based on the execution outcome.
+    /// 5. Append the result to the `result` vector.
+    ///
+    /// # Side Effects
+    /// - Modifies the `result` field by adding a new `WorkflowResult`.
     pub fn run(&mut self) {
-        // OpDecl収集
+        // Collect OpDecls from plugin packages
         let mut ops = Vec::new();
         for pkg in &self.plugin_packages {
             for func in &pkg.functions {
@@ -46,7 +61,7 @@ impl CoreWorkflowCode {
             }
         }
 
-        // 実行
+        // Execute the workflow code and record the result
         let now = SystemTime::now();
         let epoch = now.duration_since(UNIX_EPOCH).unwrap();
         let id = format!("{}-{}", self.id, epoch.as_nanos());
@@ -109,9 +124,9 @@ mod tests {
     use crate::plugin::{CorePluginPackage, CorePluginFunction};
     use crate::proto::sapphillon::v1::WorkflowCode;
 
-    // ダミーCorePluginFunction生成
+    // Generate a dummy CorePluginFunction for testing
     fn dummy_plugin_function() -> CorePluginFunction {
-        // OpDeclのダミーはplugin.rsのテスト同様にu32返却opで代用
+        // Use a dummy OpDecl that returns u32, same as in plugin.rs tests
         use deno_core::op2;
         #[op2(fast)]
         fn dummy_op() -> u32 { 42 }
@@ -123,7 +138,7 @@ mod tests {
         )
     }
 
-    // ダミーCorePluginPackage生成
+    // Generate a dummy CorePluginPackage for testing
     fn dummy_plugin_package() -> CorePluginPackage {
         CorePluginPackage::new(
             "pid".to_string(),
@@ -166,7 +181,7 @@ mod tests {
         assert_eq!(res.result_type, sapphillon::v1::WorkflowResultType::Failure as i32);
         assert!(res.result.contains("fail"));
     }
-    // ダミーWorkflowCode(proto)生成
+    // Generate a dummy WorkflowCode (proto) for testing
     fn dummy_proto_workflow_code() -> WorkflowCode {
         WorkflowCode {
             id: "wid".to_string(),
