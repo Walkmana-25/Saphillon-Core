@@ -250,8 +250,8 @@ pub struct PluginPackage {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Version {
     /// The version of the application.
-    /// Format: "MAJOR.MINOR.PATCH" with optional pre-release or build metadata
-    /// (e.g., "1.2.3", "1.2.3-beta.1", "1.2.3+build.45").
+    /// Format: "vMAJOR.MINOR.PATCH" with optional pre-release or build metadata
+    /// (e.g., "v1.2.3", "v1.2.3-alpha-1", "v1.2.3-beta.1").
     #[prost(string, tag="1")]
     pub version: ::prost::alloc::string::String,
 }
@@ -287,6 +287,7 @@ pub struct GetVersionResponse {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct WorkflowCode {
     /// Stable identifier of the workflow code entity.
+    /// Format: UUID.
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
     /// Monotonic integer representing the code version within the workflow.
@@ -302,14 +303,21 @@ pub struct WorkflowCode {
     /// Creation time of this code revision.
     #[prost(message, optional, tag="5")]
     pub created_at: ::core::option::Option<::prost_types::Timestamp>,
-    /// Optional result preview or cached output associated with this code revision.
-    /// Behavior: Optional. May be empty when no run has occurred.
-    #[prost(string, optional, tag="6")]
-    pub result: ::core::option::Option<::prost::alloc::string::String>,
+    /// Optional result previews or cached outputs associated with this code revision.
+    /// Behavior: Optional. May be empty when no run has occurred. Can store multiple results.
+    #[prost(message, repeated, tag="6")]
+    pub result: ::prost::alloc::vec::Vec<WorkflowResult>,
     /// Permissions required to execute this workflow code.
     /// Use specific Permission.resource values to scope access where possible.
     #[prost(message, repeated, tag="7")]
     pub required_permissions: ::prost::alloc::vec::Vec<Permission>,
+    /// Plugin packages that this workflow code depends on.
+    /// This allows the workflow to use functions defined in these plugins.
+    #[prost(message, repeated, tag="8")]
+    pub plugin_packages: ::prost::alloc::vec::Vec<PluginPackage>,
+    /// Plugin functions that this workflow code directly uses.
+    #[prost(string, repeated, tag="9")]
+    pub plugin_function_ids: ::prost::alloc::vec::Vec<::prost::alloc::string::String>,
 }
 /// Captures the result of running a workflow at a specific code revision.
 ///
@@ -329,6 +337,7 @@ pub struct WorkflowCode {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct WorkflowResult {
     /// Identifier of the result record.
+    /// Format: UUID.
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
     /// Human-friendly name for display.
@@ -349,9 +358,6 @@ pub struct WorkflowResult {
     /// Process exit code when applicable (0 for success).
     #[prost(int32, tag="7")]
     pub exit_code: i32,
-    /// Code revision that produced this result.
-    #[prost(int32, tag="8")]
-    pub workflow_code_revision: i32,
     /// Monotonic revision of this result record.
     #[prost(int32, tag="9")]
     pub workflow_result_revision: i32,
@@ -374,6 +380,7 @@ pub struct WorkflowResult {
 #[derive(Clone, PartialEq, ::prost::Message)]
 pub struct Workflow {
     /// Stable identifier for the workflow.
+    /// Format: UUID.
     #[prost(string, tag="1")]
     pub id: ::prost::alloc::string::String,
     /// Human-readable name for the workflow.
@@ -485,6 +492,10 @@ pub struct GenerateWorkflowResponse {
     ///    {"steps":\[{"id":"check_weather"},{"id":"notify","if":"raining"}\]}
     #[prost(string, tag="1")]
     pub workflow_definition: ::prost::alloc::string::String,
+    /// The status of the response.
+    /// If the status is not OK, it indicates an error.
+    #[prost(message, optional, tag="2")]
+    pub status: ::core::option::Option<super::super::google::rpc::Status>,
 }
 /// Request to fix a workflow definition using a problem description.
 #[allow(clippy::derive_partial_eq_without_eq)]
@@ -514,6 +525,10 @@ pub struct FixWorkflowResponse {
     /// Example: "Renamed duplicate step IDs; added retry policy to 'notify'."
     #[prost(string, tag="2")]
     pub change_summary: ::prost::alloc::string::String,
+    /// The status of the response.
+    /// If the status is not OK, it indicates an error.
+    #[prost(message, optional, tag="3")]
+    pub status: ::core::option::Option<super::super::google::rpc::Status>,
 }
 include!("sapphillon.v1.tonic.rs");
 // @@protoc_insertion_point(module)

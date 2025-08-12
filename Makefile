@@ -9,7 +9,7 @@ buf_generate:
 rust_test:
 	@echo "Run Rust Tests"
 	@echo "----------------------------------------------------------"
-	cargo test
+	cargo test --lib
 	@echo "----------------------------------------------------------"
 
 rust_build:
