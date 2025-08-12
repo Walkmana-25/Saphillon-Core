@@ -13,7 +13,8 @@ pub(crate) fn op_print_wrapper(
 
     if is_err {
         if data.is_capture_stdout() {
-            data.add_result(WorkflowStdout::Stderr(msg.to_string()));
+            // data.add_result(WorkflowStdout::Stderr(msg.to_string()));
+            data.add_result(WorkflowStdout::Stdout(msg.to_string()));
         } else {
             stderr().write_all(msg.as_bytes())?;
             stderr().flush().unwrap();

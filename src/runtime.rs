@@ -10,7 +10,7 @@ use crate::workflow;
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WorkflowStdout {
     Stdout(String),
-    Stderr(String),
+//    Stderr(String),
 }
 
 #[derive(Debug, Clone)]
@@ -227,4 +227,42 @@ mod tests {
         assert_eq!(data.get_results(), &expected, "Results should match expected output");
         
     }
+
+    #[test]
+    fn test_run_script_capture_stdout() {
+
+        use std::sync::{Arc, Mutex};
+
+        // テスト用workflow_dataを生成
+        let workflow_data = OpStateWorkflowData {
+            workflow_id: "test_id_123".to_string(),
+            result: vec![],
+            capture_stdout: true,
+        };
+        let workflow_data_arc = Arc::new(Mutex::new(workflow_data.clone()));
+
+        // JSスクリプトでopを呼び出し
+        let script = r#"
+            console.log("Initial stdout");
+            console.log("Test stdout");
+        "#;
+
+        let result = run_script(
+            script,
+            vec![],
+            Some(workflow_data_arc.clone()),
+        );
+        assert!(result.is_ok(), "workflow_id should be accessible from opstate");
+        
+        let expected = vec![
+            WorkflowStdout::Stdout("Initial stdout\n".to_string()),
+            WorkflowStdout::Stdout("Test stdout\n".to_string()),
+        ];
+        
+        // Check if the result was added to the workflow_data
+        let data = workflow_data_arc.lock().unwrap();
+        assert_eq!(data.get_results(), &expected, "Results should match expected output");
+        
+    }
+
 }
