@@ -35,6 +35,14 @@ impl OpStateWorkflowData {
             self.result.push(stdout);
         }
     }
+    
+    pub fn get_results(&self) -> &Vec<WorkflowStdout> {
+        &self.result
+    }
+    
+    pub fn is_capture_stdout(&self) -> bool {
+        self.capture_stdout
+    }
 
 }
 
