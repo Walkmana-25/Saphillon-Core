@@ -80,7 +80,8 @@ impl CoreWorkflowCode {
             .map(|r| r.workflow_result_revision + 1)
             .unwrap_or(1);
 
-        let (description, result, result_type, exit_code) = match run_script(&self.code, ops, None) {
+        let (description, result, result_type, exit_code) = match run_script(&self.code, ops, None)
+        {
             Ok(_) => (
                 "Success".to_string(),
                 "Success".to_string(),

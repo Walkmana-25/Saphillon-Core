@@ -1,8 +1,8 @@
+pub mod core;
 pub mod plugin;
 pub mod proto;
 pub mod runtime;
 pub mod workflow;
-pub mod core;
 
 pub fn add(left: u64, right: u64) -> u64 {
     left + right

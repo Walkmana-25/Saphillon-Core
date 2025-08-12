@@ -1,7 +1,7 @@
-use deno_core::{op2, OpState};
-use crate::runtime::{WorkflowStdout, OpStateWorkflowData};
+use crate::runtime::{OpStateWorkflowData, WorkflowStdout};
+use deno_core::{OpState, op2};
+use std::io::{Write, stderr, stdout};
 use std::sync::{Arc, Mutex};
-use std::io::{stderr, stdout, Write};
 
 #[op2(fast)]
 pub(crate) fn op_print_wrapper(
@@ -9,7 +9,10 @@ pub(crate) fn op_print_wrapper(
     #[string] msg: &str,
     is_err: bool,
 ) -> Result<(), std::io::Error> {
-    let mut data = state.borrow_mut::<Arc<Mutex<OpStateWorkflowData>>>().lock().unwrap();
+    let mut data = state
+        .borrow_mut::<Arc<Mutex<OpStateWorkflowData>>>()
+        .lock()
+        .unwrap();
 
     if is_err {
         if data.is_capture_stdout() {
@@ -25,7 +28,6 @@ pub(crate) fn op_print_wrapper(
         stdout().write_all(msg.as_bytes())?;
         stdout().flush().unwrap();
     }
-    
-    Ok(())
 
+    Ok(())
 }
