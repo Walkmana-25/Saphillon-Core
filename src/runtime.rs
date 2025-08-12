@@ -184,7 +184,7 @@ mod tests {
         let workflow_data = OpStateWorkflowData {
             workflow_id: "test_id_123".to_string(),
             result: vec![WorkflowStdout::Stdout("Initial stdout".to_string())],
-            capture_stdout: false,
+            capture_stdout: true,
         };
         let workflow_data_arc = Arc::new(Mutex::new(workflow_data.clone()));
 
