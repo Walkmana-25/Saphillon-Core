@@ -1,10 +1,9 @@
-use crate::proto::sapphillon;
 use crate::plugin::CorePluginPackage;
-use crate::runtime::run_script;
+use crate::proto::sapphillon;
 use crate::proto::sapphillon::v1::{WorkflowResult, WorkflowResultType};
+use crate::runtime::run_script;
 use prost_types::Timestamp;
 use std::time::{SystemTime, UNIX_EPOCH};
-
 
 pub struct CoreWorkflowCode {
     /// Unique ID of the workflow code
@@ -13,7 +12,7 @@ pub struct CoreWorkflowCode {
     pub code: String,
     /// List of plugin packages used in the workflow
     pub plugin_packages: Vec<CorePluginPackage>,
-    
+
     pub code_revision: i32,
     pub result: Vec<sapphillon::v1::WorkflowResult>,
 }
@@ -26,7 +25,12 @@ impl CoreWorkflowCode {
     /// * `code` - Deno OpDecl (workflow code body)
     /// * `plugin_packages` - List of plugin packages used in the workflow
     /// * `code_revision` - Revision number of the code
-    pub fn new(id: String, code: String, plugin_packages: Vec<CorePluginPackage>, code_revision: i32) -> Self {
+    pub fn new(
+        id: String,
+        code: String,
+        plugin_packages: Vec<CorePluginPackage>,
+        code_revision: i32,
+    ) -> Self {
         Self {
             id,
             code,
@@ -70,7 +74,11 @@ impl CoreWorkflowCode {
             seconds: epoch.as_secs() as i64,
             nanos: epoch.subsec_nanos() as i32,
         });
-        let workflow_result_revision = self.result.last().map(|r| r.workflow_result_revision + 1).unwrap_or(1);
+        let workflow_result_revision = self
+            .result
+            .last()
+            .map(|r| r.workflow_result_revision + 1)
+            .unwrap_or(1);
 
         let (description, result, result_type, exit_code) = match run_script(&self.code, ops) {
             Ok(_) => (
@@ -95,7 +103,7 @@ impl CoreWorkflowCode {
             ran_at,
             result_type,
             exit_code,
-            workflow_result_revision
+            workflow_result_revision,
         };
         self.result.push(result_obj);
     }
@@ -105,7 +113,10 @@ impl CoreWorkflowCode {
     /// # Arguments
     /// * `workflow_code` - WorkflowCode defined in proto
     /// * `plugin_packages` - List of plugin packages used in the workflow
-    pub fn new_from_proto(workflow_code: &sapphillon::v1::WorkflowCode, plugin_packages: Vec<CorePluginPackage>) -> Self {
+    pub fn new_from_proto(
+        workflow_code: &sapphillon::v1::WorkflowCode,
+        plugin_packages: Vec<CorePluginPackage>,
+    ) -> Self {
         Self {
             id: workflow_code.id.clone(),
             code: workflow_code.code.clone(),
@@ -114,14 +125,11 @@ impl CoreWorkflowCode {
             result: Vec::new(),
         }
     }
-    
-    
-
 }
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::plugin::{CorePluginPackage, CorePluginFunction};
+    use crate::plugin::{CorePluginFunction, CorePluginPackage};
     use crate::proto::sapphillon::v1::WorkflowCode;
 
     // Generate a dummy CorePluginFunction for testing
@@ -129,12 +137,14 @@ mod tests {
         // Use a dummy OpDecl that returns u32, same as in plugin.rs tests
         use deno_core::op2;
         #[op2(fast)]
-        fn dummy_op() -> u32 { 42 }
+        fn dummy_op() -> u32 {
+            42
+        }
         CorePluginFunction::new(
             "fid".to_string(),
             "fname".to_string(),
             "desc".to_string(),
-            dummy_op()
+            dummy_op(),
         )
     }
 
@@ -143,25 +153,22 @@ mod tests {
         CorePluginPackage::new(
             "pid".to_string(),
             "pname".to_string(),
-            vec![dummy_plugin_function()]
+            vec![dummy_plugin_function()],
         )
     }
-
 
     #[test]
     fn test_core_workflow_code_run_success() {
         let pkg = dummy_plugin_package();
-        let mut code = CoreWorkflowCode::new(
-            "wid".to_string(),
-            "1 + 1;".to_string(),
-            vec![pkg],
-            1
-        );
+        let mut code = CoreWorkflowCode::new("wid".to_string(), "1 + 1;".to_string(), vec![pkg], 1);
         code.run();
         assert_eq!(code.result.len(), 1);
         let res = &code.result[0];
         assert_eq!(res.exit_code, 0);
-        assert_eq!(res.result_type, sapphillon::v1::WorkflowResultType::SuccessUnspecified as i32);
+        assert_eq!(
+            res.result_type,
+            sapphillon::v1::WorkflowResultType::SuccessUnspecified as i32
+        );
         assert_eq!(res.result, "Success");
     }
 
@@ -172,13 +179,16 @@ mod tests {
             "wid".to_string(),
             "throw new Error('fail');".to_string(),
             vec![pkg],
-            1
+            1,
         );
         code.run();
         assert_eq!(code.result.len(), 1);
         let res = &code.result[0];
         assert_eq!(res.exit_code, 1);
-        assert_eq!(res.result_type, sapphillon::v1::WorkflowResultType::Failure as i32);
+        assert_eq!(
+            res.result_type,
+            sapphillon::v1::WorkflowResultType::Failure as i32
+        );
         assert!(res.result.contains("fail"));
     }
     // Generate a dummy WorkflowCode (proto) for testing
@@ -198,7 +208,7 @@ mod tests {
             "wid".to_string(),
             "console.log('test');".to_string(),
             vec![pkg],
-            2
+            2,
         );
         assert_eq!(code.id, "wid");
         assert_eq!(code.code, "console.log('test');");
@@ -226,7 +236,7 @@ mod tests {
             "wid".to_string(),
             "console.log('test');".to_string(),
             vec![pkg],
-            1
+            1,
         );
         assert!(code.result.is_empty(), "Initial results should be empty");
     }

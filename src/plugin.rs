@@ -1,6 +1,6 @@
+use crate::proto::sapphillon::v1::{PluginFunction, PluginPackage};
 use deno_core::OpDecl;
 use std::borrow::Cow;
-use crate::proto::sapphillon::v1::{PluginFunction, PluginPackage};
 
 /// Core representation of a plugin function.
 /// Holds the function's ID, name, and Deno operation.
@@ -29,9 +29,7 @@ impl CorePluginFunction {
             func: Cow::Owned(func),
             description,
         }
-
-        }
-
+    }
 
     /// Creates a CorePluginFunction from a proto PluginFunction and OpDecl.
     ///
@@ -48,8 +46,8 @@ impl CorePluginFunction {
     }
 }
 
-    /// Core representation of a plugin package.
-    /// Holds the package ID, name, and a list of functions.
+/// Core representation of a plugin package.
+/// Holds the package ID, name, and a list of functions.
 pub struct CorePluginPackage {
     /// Unique ID of the package
     pub id: String,
@@ -79,8 +77,10 @@ impl CorePluginPackage {
     /// # Arguments
     /// * `plugin_package` - PluginPackage defined in proto
     /// * `functions` - List of functions included in the package
-    pub fn new_from_plugin_package(plugin_package: &PluginPackage, functions: Vec<CorePluginFunction>) -> Self {
-
+    pub fn new_from_plugin_package(
+        plugin_package: &PluginPackage,
+        functions: Vec<CorePluginFunction>,
+    ) -> Self {
         Self {
             id: plugin_package.package_id.clone(),
             name: plugin_package.package_name.clone(),
@@ -129,7 +129,7 @@ mod tests {
             "id".to_string(),
             "name".to_string(),
             "description".to_string(),
-            dummy_op()
+            dummy_op(),
         );
         assert_eq!(func.id, "id");
         assert_eq!(func.name, "name");
@@ -146,7 +146,12 @@ mod tests {
 
     #[test]
     fn test_core_plugin_package_new() {
-        let f = CorePluginFunction::new("id".to_string(), "name".to_string(), "desc".to_string(), dummy_op());
+        let f = CorePluginFunction::new(
+            "id".to_string(),
+            "name".to_string(),
+            "desc".to_string(),
+            dummy_op(),
+        );
         let pkg = CorePluginPackage::new("pid".to_string(), "pname".to_string(), vec![f]);
         assert_eq!(pkg.id, "pid");
         assert_eq!(pkg.name, "pname");

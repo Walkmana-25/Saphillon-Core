@@ -1,6 +1,6 @@
+pub mod plugin;
 pub mod proto;
 pub mod runtime;
-pub mod plugin;
 pub mod workflow;
 
 pub fn add(left: u64, right: u64) -> u64 {

@@ -2,7 +2,7 @@
 
 pub mod sapphillon {
     #![allow(clippy::all)]
-    
+
     pub mod v1 {
         include!("proto/sapphillon.v1.rs");
     }
@@ -11,7 +11,7 @@ pub mod sapphillon {
 pub mod google {
     #![allow(clippy::all)]
     #![cfg(not(doctest))]
-    
+
     pub mod api {
         include!("proto/google.api.rs");
         pub mod expr {
