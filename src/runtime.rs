@@ -4,7 +4,7 @@ use deno_core::{Extension, JsRuntime, OpDecl, RuntimeOptions, error::JsError};
 use std::sync::{Arc, Mutex};
 
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WorkflowStdout {
     Stdout(String),
     Stderr(String),
@@ -95,6 +95,7 @@ pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>, workflow_data: Option<A
 
 #[cfg(test)]
 mod tests {
+
     use super::*;
     use deno_core::{op2, OpState};
 
@@ -164,5 +165,49 @@ mod tests {
             Some(workflow_data_arc),
         );
         assert!(result.is_ok(), "workflow_id should be accessible from opstate");
+    }
+
+    #[test]
+    fn test_run_script_change_opstate_workflow_data() {
+
+        // テスト用op: opstateからworkflow_idを取得
+        #[op2]
+        #[string]
+        fn add_stdout(state: &mut OpState) -> String {
+            let mut data = state.borrow_mut::<Arc<Mutex<OpStateWorkflowData>>>().lock().unwrap();
+            data.add_result(WorkflowStdout::Stdout("Test stdout".to_string()));
+            data.workflow_id.clone()
+        }
+        use std::sync::{Arc, Mutex};
+
+        // テスト用workflow_dataを生成
+        let workflow_data = OpStateWorkflowData {
+            workflow_id: "test_id_123".to_string(),
+            result: vec![WorkflowStdout::Stdout("Initial stdout".to_string())],
+            capture_stdout: false,
+        };
+        let workflow_data_arc = Arc::new(Mutex::new(workflow_data.clone()));
+
+        // JSスクリプトでopを呼び出し
+        let script = r#"
+            Deno.core.ops.add_stdout();
+        "#;
+
+        let result = run_script(
+            script,
+            vec![add_stdout()],
+            Some(workflow_data_arc.clone()),
+        );
+        assert!(result.is_ok(), "workflow_id should be accessible from opstate");
+        
+        let expected = vec![
+            WorkflowStdout::Stdout("Initial stdout".to_string()),
+            WorkflowStdout::Stdout("Test stdout".to_string()),
+        ];
+        
+        // Check if the result was added to the workflow_data
+        let data = workflow_data_arc.lock().unwrap();
+        assert_eq!(data.get_results(), &expected, "Results should match expected output");
+        
     }
 }
