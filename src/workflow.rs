@@ -65,8 +65,8 @@ impl CoreWorkflowCode {
                 0,
             ),
             Err(e) => (
-                format!("Error: {}", e),
-                format!("{}", e),
+                format!("Error: {e}"),
+                format!("{e}"),
                 WorkflowResultType::Failure as i32,
                 1,
             ),
@@ -80,8 +80,7 @@ impl CoreWorkflowCode {
             ran_at,
             result_type,
             exit_code,
-            workflow_result_revision,
-            ..Default::default()
+            workflow_result_revision
         };
         self.result.push(result_obj);
     }
