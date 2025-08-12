@@ -1,3 +1,5 @@
+#![cfg(not(doctest))]
+
 pub mod core;
 pub mod plugin;
 pub mod proto;

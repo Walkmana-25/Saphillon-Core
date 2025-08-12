@@ -2,6 +2,7 @@
 
 pub mod sapphillon {
     #![allow(clippy::all)]
+    #![cfg(not(doctest))]
 
     pub mod v1 {
         include!("proto/sapphillon.v1.rs");
