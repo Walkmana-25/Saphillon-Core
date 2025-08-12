@@ -2,6 +2,9 @@
 
 use deno_core::{Extension, JsRuntime, OpDecl, RuntimeOptions, error::JsError};
 use std::sync::{Arc, Mutex};
+use std::boxed::Box;
+use crate::core::op_print_wrapper;
+use crate::workflow;
 
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,6 +76,10 @@ pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>, workflow_data: Option<A
     let extension = Extension {
         name: "ext",
         ops: std::borrow::Cow::Owned(ext),
+        middleware_fn: Some(Box::new(|op| match op.name {
+            "op_print" => op_print_wrapper(),
+            _ => op,
+        })),
         ..Default::default()
     };
 
@@ -82,9 +89,19 @@ pub(crate) fn run_script(script: &str, ext: Vec<OpDecl>, workflow_data: Option<A
         ..Default::default()
     });
     
-    if let Some(workflow_data) = workflow_data {
-        runtime.op_state().borrow_mut().put(workflow_data);
+    
+    match workflow_data {
+        Some(data) => {
+            // Initialize OpStateWorkflowData in the runtime's OpState
+            runtime.op_state().borrow_mut().put(data);
+        },
+        None => {
+            // If no workflow data is provided, create a default one
+            let default_data = OpStateWorkflowData::new("default_workflow", false);
+            runtime.op_state().borrow_mut().put(Arc::new(Mutex::new(default_data)));
+        }
     }
+    
 
 
     // Execute the provided script in the runtime
