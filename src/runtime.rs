@@ -7,12 +7,16 @@ use crate::core::op_print_wrapper;
 use crate::workflow;
 
 
+/// Represents the standard output (stdout) of a workflow execution.
+/// Each variant holds the output as a string.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum WorkflowStdout {
     Stdout(String),
 //    Stderr(String),
 }
 
+/// Stores workflow-related state for operations within the runtime.
+/// Includes workflow ID, captured stdout results, and a flag for capturing stdout.
 #[derive(Debug, Clone)]
 pub struct OpStateWorkflowData {
     workflow_id: String,
@@ -21,6 +25,7 @@ pub struct OpStateWorkflowData {
 }
 
 impl OpStateWorkflowData {
+    /// Creates a new `OpStateWorkflowData` instance with the specified workflow ID and stdout capture flag.
     pub fn new(workflow_id: &str, capture_stdout: bool) -> Self {
         Self {
             workflow_id: workflow_id.to_string(),
@@ -29,20 +34,24 @@ impl OpStateWorkflowData {
         }
     }
     
+    /// Returns a reference to the workflow ID.
     pub fn get_workflow_id(&self) -> &str {
         &self.workflow_id
     }
     
+    /// Adds a `WorkflowStdout` result to the results vector if capturing stdout is enabled.
     pub fn add_result(&mut self, stdout: WorkflowStdout) {
         if self.capture_stdout {
             self.result.push(stdout);
         }
     }
     
+    /// Returns a reference to the vector of captured `WorkflowStdout` results.
     pub fn get_results(&self) -> &Vec<WorkflowStdout> {
         &self.result
     }
     
+    /// Returns true if capturing stdout is enabled.
     pub fn is_capture_stdout(&self) -> bool {
         self.capture_stdout
     }
