@@ -53,6 +53,17 @@ impl OpStateWorkflowData {
     pub fn is_capture_stdout(&self) -> bool {
         self.capture_stdout
     }
+    
+    pub fn stdout_to_string(&self) -> String {
+        self.result
+            .iter()
+            .filter_map(|r| match r {
+                WorkflowStdout::Stdout(s) => Some(s.clone()),
+                // WorkflowStdout::Stderr(s) => Some(s.clone()),
+            })
+            .collect::<Vec<String>>()
+            .join("\n")
+    }
 }
 
 /// Executes the given JavaScript code within a `JsRuntime` configured with custom operations.
@@ -278,5 +289,40 @@ mod tests {
             &expected,
             "Results should match expected output"
         );
+    }
+
+    // New unit tests for stdout_to_string()
+    #[test]
+    fn test_stdout_to_string_empty() {
+        let data = OpStateWorkflowData {
+            workflow_id: "w".to_string(),
+            result: vec![],
+            capture_stdout: true,
+        };
+        assert_eq!(data.stdout_to_string(), "");
+    }
+
+    #[test]
+    fn test_stdout_to_string_single() {
+        let data = OpStateWorkflowData {
+            workflow_id: "w".to_string(),
+            result: vec![WorkflowStdout::Stdout("Hello".to_string())],
+            capture_stdout: true,
+        };
+        assert_eq!(data.stdout_to_string(), "Hello");
+    }
+
+    #[test]
+    fn test_stdout_to_string_multiple() {
+        let data = OpStateWorkflowData {
+            workflow_id: "w".to_string(),
+            result: vec![
+                WorkflowStdout::Stdout("One".to_string()),
+                WorkflowStdout::Stdout("Two".to_string()),
+                WorkflowStdout::Stdout("Three".to_string()),
+            ],
+            capture_stdout: true,
+        };
+        assert_eq!(data.stdout_to_string(), "One\nTwo\nThree");
     }
 }
