@@ -53,13 +53,13 @@ impl OpStateWorkflowData {
     pub fn is_capture_stdout(&self) -> bool {
         self.capture_stdout
     }
-    
+
     pub fn stdout_to_string(&self) -> String {
         self.result
             .iter()
-            .filter_map(|r| match r {
-                WorkflowStdout::Stdout(s) => Some(s.clone()),
-                // WorkflowStdout::Stderr(s) => Some(s.clone()),
+            .map(|r| match r {
+                WorkflowStdout::Stdout(s) => s.clone(),
+                // WorkflowStdout::Stderr(s) => s.clone(),
             })
             .collect::<Vec<String>>()
             .join("\n")
@@ -108,13 +108,16 @@ pub(crate) fn run_script(
         extensions: vec![extension],
         ..Default::default()
     });
-    
+
     let mut data: Arc<Mutex<OpStateWorkflowData>>;
     match workflow_data {
         Some(d) => data = d,
         None => {
             // If no workflow data is provided, create a default one
-            data = Arc::new(Mutex::new(OpStateWorkflowData::new("default_workflow", false)));
+            data = Arc::new(Mutex::new(OpStateWorkflowData::new(
+                "default_workflow",
+                false,
+            )));
         }
     }
     runtime.op_state().borrow_mut().put(data.clone());

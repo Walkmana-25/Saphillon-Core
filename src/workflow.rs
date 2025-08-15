@@ -1,10 +1,10 @@
 use crate::plugin::CorePluginPackage;
 use crate::proto::sapphillon;
 use crate::proto::sapphillon::v1::{WorkflowResult, WorkflowResultType};
-use crate::runtime::{run_script, OpStateWorkflowData};
+use crate::runtime::{OpStateWorkflowData, run_script};
 use prost_types::Timestamp;
-use std::time::{SystemTime, UNIX_EPOCH};
 use std::sync::{Arc, Mutex};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 pub struct CoreWorkflowCode {
     /// Unique ID of the workflow code
@@ -80,12 +80,13 @@ impl CoreWorkflowCode {
             .last()
             .map(|r| r.workflow_result_revision + 1)
             .unwrap_or(1);
-        
-        let opstate_workflow_data = OpStateWorkflowData::new(
-            &self.id,
-            true
+
+        let opstate_workflow_data = OpStateWorkflowData::new(&self.id, true);
+        let result = run_script(
+            &self.code,
+            ops,
+            Some(Arc::new(Mutex::new(opstate_workflow_data))),
         );
-        let result = run_script(&self.code, ops, Some(Arc::new(Mutex::new(opstate_workflow_data))));
 
         let (description, result, result_type, exit_code) = match result {
             Ok(data) => (
@@ -167,7 +168,12 @@ mod tests {
     #[test]
     fn test_core_workflow_code_run_success() {
         let pkg = dummy_plugin_package();
-        let mut code = CoreWorkflowCode::new("wid".to_string(), "console.log(1 + 1);".to_string(), vec![pkg], 1);
+        let mut code = CoreWorkflowCode::new(
+            "wid".to_string(),
+            "console.log(1 + 1);".to_string(),
+            vec![pkg],
+            1,
+        );
         code.run();
         assert_eq!(code.result.len(), 1);
         let res = &code.result[0];
