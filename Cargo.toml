@@ -19,7 +19,7 @@ env_logger = { version = "0.11", default-features = false }
 tonic = { version = "0.12.0", default-features = false }
 prost = { version = "0.13.1", default-features = false }
 prost-types = { version = "0.13.1", default-features = false }
-deno_core = { version = "0.354.0", default-features = false }
+deno_core = { version = "0.355.0", default-features = false }
 deno_runtime = "0.220.0"
 deno_permissions = "0.71.0"
 deno_error = "0.7.0"
