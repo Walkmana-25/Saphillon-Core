@@ -91,7 +91,7 @@ pub(crate) fn run_script(
     script: &str,
     ext: Vec<OpDecl>,
     workflow_data: Option<Arc<Mutex<OpStateWorkflowData>>>,
-) -> Result<(), Box<JsError>> {
+) -> Result<Arc<Mutex<OpStateWorkflowData>>, Box<JsError>> {
     // Register the extension with the provided operations
     let extension = Extension {
         name: "ext",
@@ -108,26 +108,21 @@ pub(crate) fn run_script(
         extensions: vec![extension],
         ..Default::default()
     });
-
+    
+    let mut data: Arc<Mutex<OpStateWorkflowData>>;
     match workflow_data {
-        Some(data) => {
-            // Initialize OpStateWorkflowData in the runtime's OpState
-            runtime.op_state().borrow_mut().put(data);
-        }
+        Some(d) => data = d,
         None => {
             // If no workflow data is provided, create a default one
-            let default_data = OpStateWorkflowData::new("default_workflow", false);
-            runtime
-                .op_state()
-                .borrow_mut()
-                .put(Arc::new(Mutex::new(default_data)));
+            data = Arc::new(Mutex::new(OpStateWorkflowData::new("default_workflow", false)));
         }
     }
+    runtime.op_state().borrow_mut().put(data.clone());
 
     // Execute the provided script in the runtime
     let result = runtime.execute_script("workflow.js", script.to_string())?;
 
-    Ok(())
+    Ok(data)
 }
 
 #[cfg(test)]
@@ -324,5 +319,41 @@ mod tests {
             capture_stdout: true,
         };
         assert_eq!(data.stdout_to_string(), "One\nTwo\nThree");
+    }
+    #[test]
+    fn test_run_script_capture_stdout_from_return() {
+        use std::sync::{Arc, Mutex};
+
+        // テスト用workflow_dataを生成
+        let workflow_data = OpStateWorkflowData {
+            workflow_id: "test_id_123".to_string(),
+            result: vec![],
+            capture_stdout: true,
+        };
+        let workflow_data_arc = Arc::new(Mutex::new(workflow_data.clone()));
+
+        // JSスクリプトでopを呼び出し
+        let script = r#"
+            console.log("Initial stdout");
+            console.log("Test stdout");
+        "#;
+
+        let result = run_script(script, vec![], Some(workflow_data_arc.clone()));
+        assert!(
+            result.is_ok(),
+            "workflow_id should be accessible from opstate"
+        );
+
+        let expected = vec![
+            WorkflowStdout::Stdout("Initial stdout\n".to_string()),
+            WorkflowStdout::Stdout("Test stdout\n".to_string()),
+        ];
+
+        // Check if the result was added to the workflow_data
+        assert_eq!(
+            result.unwrap().lock().unwrap().get_results(),
+            &expected,
+            "Results should match expected output"
+        );
     }
 }
